@@ -1,6 +1,6 @@
 {
   "name": "jsize",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Find out minified and gzip package size",
   "main": "index.js",
   "scripts": {
@@ -22,5 +22,8 @@
     "npm": "^2.13.5",
     "pretty-bytes": "^2.0.1",
     "uglify-js": "^2.4.24"
+  },
+  "bin": {
+    "jsize": "./bin/jsize"
   }
 }
