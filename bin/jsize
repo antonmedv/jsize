@@ -1,0 +1,56 @@
+#!/usr/bin/env node
+var program = require('commander');
+var prettyBytes = require('pretty-bytes');
+var colors = require('colors');
+var jsize = require('../index');
+
+
+var write = console.log;
+console.log = function () {
+  // Omit output
+};
+
+program
+  .usage('[options] <name ...>')
+  .option('-v, --verbose', 'Display initial, minified, gzip size.')
+  .parse(process.argv);
+
+
+function colorBytes(n) {
+  var str = prettyBytes(n);
+  if (n < 1000) {
+    return str.underline.green;
+  } else if (n < 5000) {
+    return str.green;
+  } else if (n < 50000) {
+    return str.yellow;
+  } else {
+    return str.red;
+  }
+}
+
+function log(packageName, result) {
+  var info = '';
+  if (program.verbose) {
+    info += prettyBytes(result.initial) + ' (initial)\t';
+    info += prettyBytes(result.minify) + ' (minify)\t';  
+  }
+  info += colorBytes(result.gzip) + ' (gzip)';
+  write(packageName, "\t", info);
+}
+
+function forEach(packages) {
+  var packageName = packages.shift();
+  jsize(packageName, function (packageName, result) {
+    log(packageName, result);
+    if (packages.length > 0) {
+      forEach(packages);
+    }
+  });
+}
+
+if (program.args.length > 0) {
+  forEach(program.args);
+} else {
+  program.help();
+}

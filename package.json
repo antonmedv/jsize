@@ -1,0 +1,25 @@
+{
+  "name": "jsize",
+  "version": "1.0.0",
+  "description": "Find out minified, gzip package size",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "size",
+    "gzip",
+    "minify"
+  ],
+  "author": "Anton Medvedev",
+  "license": "MIT",
+  "dependencies": {
+    "browserify": "^11.0.1",
+    "colors": "^1.1.2",
+    "commander": "^2.8.1",
+    "gzip-size": "^3.0.0",
+    "npm": "^2.13.5",
+    "pretty-bytes": "^2.0.1",
+    "uglify-js": "^2.4.24"
+  }
+}
