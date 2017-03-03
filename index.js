@@ -19,8 +19,8 @@ function npmInstall(packageName, callback) {
     npm.prefix = tmpDir;
     if (packageName) {
       npm.commands.install([packageName], function (err, deps) {
-        var location = deps[deps.length - 1][1]
-        var packagePath = path.join(path.dirname(tmpDir), location, 'package.json')
+        var location = deps[deps.length - 1][1];
+        var packagePath = path.join(path.dirname(tmpDir), location, 'package.json');
         packageName = require(packagePath).name;
         fs.writeFileSync(tmpIndexFilePath, 'require("' + packageName + '");');
         callback(packageName, tmpIndexFilePath);
