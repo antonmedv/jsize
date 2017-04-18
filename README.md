@@ -1,4 +1,7 @@
-# Find out minified and gzip npm package size.
+> **Abandoned**. Use package-size instead. 
+
+# jsize
+
 To install:
 ```
 npm install -g jsize

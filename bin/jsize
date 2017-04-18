@@ -1,23 +1,16 @@
 #!/usr/bin/env node
-var program = require('commander');
-var prettyBytes = require('pretty-bytes');
-var colors = require('colors');
-var jsize = require('../index');
-
-
-var write = console.log;
-console.log = function () {
-  // Omit output
-};
+const program = require('commander');
+const prettyBytes = require('pretty-bytes');
+const colors = require('colors');
+const jsize = require('../index');
 
 program
   .usage('[options] <name ...>')
   .option('-v, --verbose', 'Display initial, minified, gzip size.')
   .parse(process.argv);
 
-
 function colorBytes(n) {
-  var str = prettyBytes(n);
+  const str = prettyBytes(n);
   if (n < 1000) {
     return str.underline.green;
   } else if (n < 5000) {
@@ -29,28 +22,30 @@ function colorBytes(n) {
   }
 }
 
-function log(packageName, result) {
-  var info = '';
+function print(packageName, result) {
+  let info = '';
   if (program.verbose) {
     info += prettyBytes(result.initial) + ' (initial)\t';
-    info += prettyBytes(result.minify) + ' (minify)\t';  
+    info += prettyBytes(result.minify) + ' (minify)\t';
   }
   info += colorBytes(result.gzip) + ' (gzip)';
-  write(packageName, "\t", info);
+  console.log(packageName, '\t', info);
 }
 
-function forEach(packages) {
-  var packageName = packages.shift();
-  jsize(packageName, function (packageName, result) {
-    log(packageName, result);
-    if (packages.length > 0) {
-      forEach(packages);
-    }
-  });
+async function forEach(packages) {
+  const packageName = packages.shift();
+  const result = await jsize(packageName);
+  print(packageName, result);
+
+  if (packages.length > 0) {
+    await forEach(packages);
+  }
 }
 
 if (program.args.length > 0) {
-  forEach(program.args);
+  forEach(program.args).catch((err) => {
+    console.error(err);
+  });
 } else {
   program.help();
 }
