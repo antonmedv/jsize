@@ -12,6 +12,10 @@ const bundle = path.join(tmp, 'bundle.js');
 const minimized = path.join(tmp, 'bundle.min.js');
 
 function install(packageName) {
+  // Ignore path after module name such as `express/lib/application'
+  // Also supports scoped modules such as '@rill/http/adapter/browser'
+  packageName = packageName.match(/^(@[^\/]+\/)?[^\/]+/)[0]
+
   return new Promise((resolve, reject) => {
     const log = console.log;
     console.log = () => {
