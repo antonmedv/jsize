@@ -1,106 +1,91 @@
-const path = require('path');
-const fs = require('fs');
-const os = require('os');
-const npm = require('npm');
-const webpack = require('webpack');
-const uglify = require('uglify-js');
-const gzipSize = require('gzip-size');
+'use strict'
 
-const tmp = os.tmpdir();
-const index = path.join(tmp, 'index.js');
-const bundle = path.join(tmp, 'bundle.js');
-const minimized = path.join(tmp, 'bundle.min.js');
+const Buffer = require('buffer').Buffer
+const gzipSize = require('gzip-size')
+const npm = require('npm')
+const MemoryFs = require('memory-fs')
+const parsePackageName = require('parse-package-name')
+const path = require('path')
+const requireRelative = require('require-relative')
+const uglify = require('uglify-js')
+const webpack = require('webpack')
+const tmp = require('os').tmpdir()
+function noop () {}
 
-function install(packageName) {
-  // Ignore path after module name such as `express/lib/application'
-  // Also supports scoped modules such as '@rill/http/adapter/browser'
-  packageName = packageName.match(/^(@[^\/]+\/)?[^\/]+/)[0]
+/**
+ * Calculates the sizes (initial, minified and gziped) for a given package.
+ *
+ * @param {string} pkg - the package to check the size of.
+ * @return {Promise}
+ */
+module.exports = function jsize (pkg) {
+  const { name, version, path: file } = parsePackageName(pkg)
+  return install(`${name}@${version || 'latest'}`)
+    .then(() => build(path.join(name, file)))
+    .then(script => {
+      const minimized = uglify.minify(script).code
 
+      return {
+        initial: Buffer.byteLength(script, 'utf8'),
+        minify: Buffer.byteLength(minimized),
+        gzip: gzipSize.sync(minimized)
+      }
+    })
+  })
+}
+
+/**
+ * Installs a package with npm to the temp directory.
+ *
+ * @param {string} id - the package to install.
+ */
+function install (id) {
   return new Promise((resolve, reject) => {
-    const log = console.log;
-    console.log = () => {
-    };
+    // Temporarily disable logging.
+    const log = console.log
+    console.log = noop
+
     npm.load({
-        loaded: false,
-        progress: false,
-        loglevel: 'silent'
-      },
-      (err, npm) => {
-        if (err) {
-          return reject(err);
-        }
-        npm.commands.install(
-          tmp,
-          [packageName],
-          (err, deps) => {
-            console.log = log;
-            if (err) {
-              return reject(err);
-            }
-            resolve(deps);
-          }
-        );
-      });
-  });
+      loaded: false,
+      progress: false,
+      loglevel: 'silent'
+    }, (err, npm) => {
+      if (err) return reject(err)
+
+      npm.commands.install(tmp, [id], (err, deps) => {
+        // Restore logging.
+        console.log = log
+        if (err) return reject(err)
+        resolve(deps)
+      }
+    )
+    })
+  })
 }
 
-function create(packageName) {
-  return new Promise((resolve) => {
-    fs.writeFile(
-      index,
-      `window.package = require('${packageName}');`,
-      () => resolve()
-    );
-  });
-}
-
-function build() {
+/**
+ * Uses webpack to build a file in memory and return the bundle.
+ *
+ * @param {*} file - the entry file to build.
+ * @return {Promise<string>}
+ */
+function build (file) {
   return new Promise((resolve, reject) => {
-    webpack({
-      entry: index,
-      output: {
-        path: path.dirname(bundle),
-        filename: path.basename(bundle)
-      },
+    const compiler = webpack({
+      entry: requireRelative.resolve(file, tmp),
+      output: { filename: 'file' },
       plugins: [
-        new webpack.optimize.UglifyJsPlugin({mangle: false, sourcemap: false}),
-        new webpack.DefinePlugin({
-          'process.env.NODE_ENV': 'production',
-          'process.browser': true
-        })
+        new webpack.optimize.UglifyJsPlugin({ mangle: false, sourcemap: false }),
+        new webpack.DefinePlugin({ 'process.env.NODE_ENV': 'production', 'process.browser': true })
       ]
     }, (err, stats) => {
-      if (err || stats.hasErrors()) {
-        reject(err);
-      } else {
-        resolve();
-      }
-    });
-  });
+      if (err || stats.hasErrors()) reject(err)
+      const compilation = stats.compilation
+      const compiler = compilation.compiler
+      const memoryFs = compiler.outputFileSystem
+      const outputFile = compilation.assets.file.existsAt
+      resolve(memoryFs.readFileSync(outputFile, 'utf8'))
+    })
+    compiler.outputFileSystem = new MemoryFs()
+  })
 }
-
-function minify() {
-  const result = uglify.minify(bundle);
-  fs.writeFileSync(minimized, result.code);
-}
-
-function size(file) {
-  const stat = fs.statSync(file);
-  return stat.size;
-}
-
-module.exports = async function jsize(packageName) {
-  const result = {
-    initial: 0,
-    minify: 0,
-    gzip: 0
-  };
-  await install(packageName);
-  await create(packageName);
-  await build();
-  result.initial = size(bundle);
-  minify();
-  result.minify = size(minimized);
-  result.gzip = gzipSize.sync(fs.readFileSync(minimized, 'utf8'));
-  return result;
-};
