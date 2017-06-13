@@ -31,7 +31,6 @@ module.exports = function jsize (pkg) {
         gzip: gzipSize.sync(minimized)
       }
     })
-  })
 }
 
 /**
