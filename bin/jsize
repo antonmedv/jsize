@@ -23,7 +23,9 @@ if (program.args.length > 0) {
     .reduce((p, pkg) => p.then(() => {
       spinner.text = pkg
       spinner.start()
-      return jsize(pkg).then(print)
+      return jsize(pkg)
+        .then(print)
+        .catch(err => spinner.fail(err.message))
     }), Promise.resolve())
     .catch(err => console.error(err))
 } else {
