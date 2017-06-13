@@ -1,20 +1,23 @@
-> **Abandoned**. Use package-size instead. 
-
 # jsize
 
 To install:
 ```
 npm install -g jsize
 ```
+
+## Features
+* [Scoped packages](https://docs.npmjs.com/misc/scope).
+* Individual files within packages.
+* Multiple packages at once.
+
 ## Usage
 
 ```
-$ jsize jquery angular react monkberry temple-wat
-jquery 	   29.88 kB (gzip)
-angular    48.95 kB (gzip)
-react      51.29 kB (gzip)
-monkberry  1.26 kB (gzip)
-temple-wat 821 B (gzip)
+$ jsize jquery lodash lodash/map @rill/http/adapter/document
+jquery                         30.6 kB (gzip)
+lodash                         25.3 kB (gzip)
+lodash/map                     5.91 kB (gzip)
+@rill/http/adapter/document    5.52 kB (gzip)
 ```
 
 ## Options
@@ -25,5 +28,5 @@ Display initial size, minified size and gzip size.
 
 ```
 $ jsize jquery -v
-jquery 	 248.17 kB (initial)	84.74 kB (minify)	29.88 kB (gzip)
+jquery    271 kB (initial)    87.3 kB (minify)    30.6 kB (gzip)
 ```
