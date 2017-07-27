@@ -71,14 +71,15 @@ function install (id) {
 function build (file) {
   return new Promise((resolve, reject) => {
     const compiler = webpack({
-      entry: requireRelative.resolve(file, tmp),
+      target: 'web',
       output: { filename: 'file' },
+      entry: requireRelative.resolve(file, tmp),
       plugins: [
         new webpack.optimize.UglifyJsPlugin({ mangle: false, sourcemap: false }),
         new webpack.DefinePlugin({ 'process.env.NODE_ENV': 'production', 'process.browser': true })
       ]
     }, (err, stats) => {
-      if (err || stats.hasErrors()) reject(err)
+      if (err || stats.hasErrors()) reject(err || new Error(stats.toString('errors-only')))
       const compilation = stats.compilation
       const compiler = compilation.compiler
       const memoryFs = compiler.outputFileSystem

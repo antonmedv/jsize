@@ -48,7 +48,7 @@ function maxLength (max, it) {
  *
  * @param {object} result - the sizes from jsize.
  */
-function print(result) {
+function print (result) {
   let info = ''
   if (program.verbose) {
     info += (prettyBytes(result.initial) + ' (initial)').padEnd(20, ' ')
