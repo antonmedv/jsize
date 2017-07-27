@@ -21,7 +21,7 @@ function noop () {}
 module.exports = function jsize (pkg) {
   const { name, version, path: file } = parsePackageName(pkg)
   return install(`${name}@${version || 'latest'}`)
-    .then(() => build(path.join(name, file)))
+    .then(() => build(name, file))
     .then(script => {
       const minimized = uglify.minify(script).code
 
@@ -68,14 +68,18 @@ function install (id) {
  * @param {*} file - the entry file to build.
  * @return {Promise<string>}
  */
-function build (file) {
+function build (name, file) {
   return new Promise((resolve, reject) => {
+    const entry = requireRelative.resolve(path.join(name, file), tmp);
+    const packageJson = requireRelative.resolve(path.join(name, 'package.json'), tmp);
+    const externals = Object.keys(require(packageJson).peerDependencies || {});
     const compiler = webpack({
       target: 'web',
       output: { filename: 'file' },
-      entry: requireRelative.resolve(file, tmp),
+      entry,
+      externals,
       plugins: [
-        new webpack.optimize.UglifyJsPlugin({ mangle: true, sourcemap: false }),
+        new webpack.optimize.UglifyJsPlugin({ sourcemap: false }),
         new webpack.DefinePlugin({ 'process.env.NODE_ENV': '"production"', 'process.browser': true })
       ]
     }, (err, stats) => {
