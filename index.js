@@ -71,9 +71,9 @@ function install (id) {
  */
 function build (name, file) {
   return new Promise((resolve, reject) => {
-    const entry = requireRelative.resolve(path.join(name, file), tmp);
-    const packageJson = requireRelative.resolve(path.join(name, 'package.json'), tmp);
-    const externals = Object.keys(require(packageJson).peerDependencies || {});
+    const entry = requireRelative.resolve(path.join(name, file), tmp)
+    const packageJson = requireRelative.resolve(path.join(name, 'package.json'), tmp)
+    const externals = Object.keys(require(packageJson).peerDependencies || {})
     const compiler = webpack({
       target: 'web',
       output: { filename: 'file' },
