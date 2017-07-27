@@ -15,9 +15,9 @@ npm install -g jsize
 ```
 $ jsize jquery lodash lodash/map @rill/http/adapter/document
 ✔ jquery                         30.6 kB (gzip)
-✔ lodash                         24.7 kB (gzip)
-✔ lodash/map                     5.86 kB (gzip)
-✔ @rill/http/adapter/document    5.5 kB (gzip)
+✔ lodash                         24.8 kB (gzip)
+✔ lodash/map                     5.88 kB (gzip)
+✔ @rill/http/adapter/document    5.51 kB (gzip)
 ```
 
 ## Options
@@ -39,6 +39,6 @@ Be sure to include the peerDependencies first when checking the size like so:
 
 ```
 $ jsize react react-dom
-✔ react        13.6 kB (gzip)
-✔ react-dom    64.2 kB (gzip)
+✔ react        7.22 kB (gzip)
+✔ react-dom    43.9 kB (gzip)
 ```
