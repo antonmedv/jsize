@@ -65,7 +65,8 @@ function install (id) {
 /**
  * Uses webpack to build a file in memory and return the bundle.
  *
- * @param {*} file - the entry file to build.
+ * @param {*} name - library folder name
+ * @param {*} file - entry point path relative to the library folder
  * @return {Promise<string>}
  */
 function build (name, file) {
@@ -79,7 +80,7 @@ function build (name, file) {
       entry,
       externals,
       plugins: [
-        new webpack.optimize.UglifyJsPlugin({ sourcemap: false }),
+        new webpack.optimize.UglifyJsPlugin({ mangle: false, sourcemap: false }),
         new webpack.DefinePlugin({ 'process.env.NODE_ENV': '"production"', 'process.browser': true })
       ]
     }, (err, stats) => {
