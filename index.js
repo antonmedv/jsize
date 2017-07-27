@@ -75,7 +75,7 @@ function build (file) {
       output: { filename: 'file' },
       entry: requireRelative.resolve(file, tmp),
       plugins: [
-        new webpack.optimize.UglifyJsPlugin({ mangle: false, sourcemap: false }),
+        new webpack.optimize.UglifyJsPlugin({ mangle: true, sourcemap: false }),
         new webpack.DefinePlugin({ 'process.env.NODE_ENV': '"production"', 'process.browser': true })
       ]
     }, (err, stats) => {
