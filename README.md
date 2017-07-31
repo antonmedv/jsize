@@ -33,12 +33,13 @@ $ jsize jquery -v
 
 ## Peer Dependencies
 
-One common issue is getting the size of a module when it has a peer dependency such as react-dom.
-
-Be sure to include the peerDependencies first when checking the size like so:
+When a package has `peerDependencies` they are automatically not included in the bundle size.
+To have a better idea of the total size of all dependencies you must add up all peers as well.
 
 ```
 $ jsize react react-dom
 ✔ react        7.22 kB (gzip)
 ✔ react-dom    43.9 kB (gzip)
 ```
+
+Where the total for `react` in the browser is `51.12kb (gzip)`.
