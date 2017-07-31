@@ -19,7 +19,10 @@ function noop () {}
  * @return {Promise}
  */
 module.exports = function jsize (pkg) {
-  const { name, version, path: file } = parsePackageName(pkg)
+  const parsed = parsePackageName(pkg)
+  const name = parsed.name
+  const version = parsed.version
+  const file = parsed.path
   return install(`${name}@${version || 'latest'}`)
     .then(() => build(name, file))
     .then(script => {
@@ -77,10 +80,10 @@ function build (name, file) {
     const compiler = webpack({
       target: 'web',
       output: { filename: 'file' },
-      entry,
-      externals,
+      entry: entry,
+      externals: externals,
       plugins: [
-        new webpack.optimize.UglifyJsPlugin({ mangle: true, sourcemap: false }),
+        new webpack.optimize.UglifyJsPlugin({ sourcemap: false }),
         new webpack.DefinePlugin({ 'process.env.NODE_ENV': '"production"', 'process.browser': true })
       ]
     }, (err, stats) => {

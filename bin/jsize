@@ -3,6 +3,7 @@
 
 const program = require('commander')
 const chalk = require('chalk')
+const padEnd = require('pad-end')
 const prettyBytes = require('pretty-bytes')
 const spinner = require('ora')('Starting...').start()
 const jsize = require('../index')
@@ -51,11 +52,11 @@ function maxLength (max, it) {
 function print (result) {
   let info = ''
   if (program.verbose) {
-    info += (prettyBytes(result.initial) + ' (initial)').padEnd(20, ' ')
-    info += (prettyBytes(result.minify) + ' (minify)').padEnd(20, ' ')
+    info += padEnd(prettyBytes(result.initial) + ' (initial)', 20, ' ')
+    info += padEnd(prettyBytes(result.minify) + ' (minify)', 20, ' ')
   }
   info += colorBytes(result.gzip) + ' (gzip)'
-  spinner.succeed(spinner.text.padEnd(padding, ' ') + info)
+  spinner.succeed(padEnd(spinner.text, padding, ' ') + info)
 }
 
 /**
