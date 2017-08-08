@@ -1,6 +1,6 @@
 {
   "name": "jsize",
-  "version": "3.3.1",
+  "version": "4.0.0",
   "description": "Find out minified and gziped package size",
   "main": "index.js",
   "scripts": {
