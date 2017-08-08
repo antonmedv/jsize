@@ -33,8 +33,8 @@ module.exports = function jsize (pkg) {
 
       return {
         initial: Buffer.byteLength(script, 'utf8'),
-        minify: Buffer.byteLength(minimized),
-        gzip: gzipSize.sync(minimized)
+        minified: Buffer.byteLength(minimized),
+        gzipped: gzipSize.sync(minimized)
       }
     })
 }

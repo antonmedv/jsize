@@ -1,6 +1,11 @@
 #!/usr/bin/env node
 'use strict'
 
+// Check for cli updates.
+const updateNotifier = require('update-notifier')
+const pkg = require('../package.json')
+updateNotifier({ pkg: pkg }).notify()
+
 const chalk = require('chalk')
 const padEnd = require('pad-end')
 const program = require('commander')
@@ -11,7 +16,7 @@ const jsize = require('../index')
 // Parse cli options.
 program
   .usage('[options] <name ...>')
-  .option('-v, --verbose', 'Display initial, minified, gzip size.')
+  .option('-v, --verbose', 'Display initial, minified and gzipped size.')
   .parse(process.argv)
 
 // Calucate the padding based on the longest package name.
@@ -53,9 +58,9 @@ function print (result) {
   let info = ''
   if (program.verbose) {
     info += padEnd(prettyBytes(result.initial) + ' (initial)', 20, ' ')
-    info += padEnd(prettyBytes(result.minify) + ' (minify)', 20, ' ')
+    info += padEnd(prettyBytes(result.minified) + ' (minified)', 20, ' ')
   }
-  info += colorBytes(result.gzip) + ' (gzip)'
+  info += colorBytes(result.gzipped) + ' (gzipped)'
   spinner.succeed(padEnd(spinner.text, padding, ' ') + info)
 }
 
