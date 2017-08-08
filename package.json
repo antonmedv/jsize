@@ -17,6 +17,7 @@
   "dependencies": {
     "chalk": "^2.0.1",
     "commander": "^2.11.0",
+    "enhanced-resolve": "^3.4.1",
     "gzip-size": "^3.0.0",
     "memory-fs": "^0.4.1",
     "npm": "^5.3.0",
@@ -24,8 +25,6 @@
     "pad-end": "^1.0.2",
     "parse-package-name": "^0.1.0",
     "pretty-bytes": "^4.0.2",
-    "require-relative": "^0.8.7",
-    "resolve": "^1.4.0",
     "uglify-js": "^3.0.26",
     "webpack": "^3.4.1"
   },

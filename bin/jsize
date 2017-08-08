@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 'use strict'
 
-const program = require('commander')
 const chalk = require('chalk')
 const padEnd = require('pad-end')
+const program = require('commander')
 const prettyBytes = require('pretty-bytes')
 const spinner = require('ora')('Starting...').start()
 const jsize = require('../index')

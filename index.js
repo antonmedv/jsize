@@ -1,16 +1,19 @@
 'use strict'
 
-const Buffer = require('buffer').Buffer
-const gzipSize = require('gzip-size')
 const npm = require('npm')
-const MemoryFs = require('memory-fs')
-const parsePackageName = require('parse-package-name')
 const path = require('path')
-const requireRelative = require('require-relative')
-const uglify = require('uglify-js')
-const webpack = require('webpack')
 const tmp = require('os').tmpdir()
-function noop () {}
+const webpack = require('webpack')
+const uglify = require('uglify-js')
+const gzipSize = require('gzip-size')
+const MemoryFs = require('memory-fs')
+const Buffer = require('buffer').Buffer
+const parsePackageName = require('parse-package-name')
+const enhancedResolve = require('enhanced-resolve')
+const resolver = enhancedResolve.ResolverFactory.createResolver({
+  fileSystem: new enhancedResolve.NodeJsInputFileSystem(),
+  mainFields: ['browser', 'module', 'main']
+})
 
 /**
  * Calculates the sizes (initial, minified and gziped) for a given package.
@@ -45,7 +48,7 @@ function install (id) {
   return new Promise((resolve, reject) => {
     // Temporarily disable logging.
     const log = console.log
-    console.log = noop
+    console.log = () => {}
 
     npm.load({
       loaded: false,
@@ -73,27 +76,48 @@ function install (id) {
  * @return {Promise<string>}
  */
 function build (name, file) {
-  return new Promise((resolve, reject) => {
-    const entry = requireRelative.resolve(path.join(name, file), tmp)
-    const packageJson = requireRelative.resolve(path.join(name, 'package.json'), tmp)
-    const externals = Object.keys(require(packageJson).peerDependencies || {})
-    const compiler = webpack({
-      target: 'web',
-      output: { filename: 'file' },
-      entry: entry,
-      externals: externals,
-      plugins: [
-        new webpack.optimize.UglifyJsPlugin({ sourcemap: false }),
-        new webpack.DefinePlugin({ 'process.env.NODE_ENV': '"production"', 'process.browser': true })
-      ]
-    }, (err, stats) => {
-      if (err || stats.hasErrors()) reject(err || new Error(stats.toString('errors-only')))
-      const compilation = stats.compilation
-      const compiler = compilation.compiler
-      const memoryFs = compiler.outputFileSystem
-      const outputFile = compilation.assets.file.existsAt
-      resolve(memoryFs.readFileSync(outputFile, 'utf8'))
+  return Promise.all([
+    resolve(tmp, path.join(name, file)),
+    resolve(tmp, path.join(name, 'package.json'))
+  ]).then(results => {
+    const entry = results[0]
+    const peers = require(results[1]).peerDependencies
+    const externals = Object.keys(peers || {})
+
+    return new Promise((resolve, reject) => {
+      const compiler = webpack({
+        target: 'web',
+        output: { filename: 'file' },
+        entry: entry,
+        externals: externals,
+        plugins: [
+          new webpack.optimize.UglifyJsPlugin({ sourcemap: false }),
+          new webpack.DefinePlugin({ 'process.env.NODE_ENV': '"production"', 'process.browser': true })
+        ]
+      }, (err, stats) => {
+        if (err || stats.hasErrors()) reject(err || new Error(stats.toString('errors-only')))
+        const compilation = stats.compilation
+        const compiler = compilation.compiler
+        const memoryFs = compiler.outputFileSystem
+        const outputFile = compilation.assets.file.existsAt
+        resolve(memoryFs.readFileSync(outputFile, 'utf8'))
+      })
+      compiler.outputFileSystem = new MemoryFs()
     })
-    compiler.outputFileSystem = new MemoryFs()
+  })
+}
+
+/**
+ * Async resolve a files path using nodes module resolution.
+ * @param {string} dir - the directory to look in.
+ * @param {string} file - the file to find.
+ * @return {Promise<string>}
+ */
+function resolve (dir, file) {
+  return new Promise(function (resolve, reject) {
+    resolver.resolve({}, dir, file, function (err, result) {
+      if (err) reject(err)
+      else resolve(result)
+    })
   })
 }
