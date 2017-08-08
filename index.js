@@ -30,12 +30,13 @@ module.exports = function jsize (pkg) {
     .then(() => build(name, file))
     .then(script => {
       const minimized = uglify.minify(script).code
-
-      return {
-        initial: Buffer.byteLength(script, 'utf8'),
-        minified: Buffer.byteLength(minimized),
-        gzipped: gzipSize.sync(minimized)
-      }
+      return getGzippedSize(minimized).then(gzipped => {
+        return {
+          initial: Buffer.byteLength(script, 'utf8'),
+          minified: Buffer.byteLength(minimized),
+          gzipped: gzipped
+        }
+      })
     })
 }
 
@@ -114,8 +115,23 @@ function build (name, file) {
  * @return {Promise<string>}
  */
 function resolve (dir, file) {
-  return new Promise(function (resolve, reject) {
-    resolver.resolve({}, dir, file, function (err, result) {
+  return new Promise((resolve, reject) => {
+    resolver.resolve({}, dir, file, (err, result) => {
+      if (err) reject(err)
+      else resolve(result)
+    })
+  })
+}
+
+/**
+ * Calculates the gzipped size of a string.
+ *
+ * @param {string} str - the string to check.
+ * @return {Promise<number>}
+ */
+function getGzippedSize (str) {
+  return new Promise((resolve, reject) => {
+    gzipSize(str, (err, result) => {
       if (err) reject(err)
       else resolve(result)
     })
