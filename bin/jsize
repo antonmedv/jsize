@@ -26,10 +26,10 @@ if (program.args.length > 0) {
   // Build and analyze packages sequentially.
   program
     .args
-    .reduce((p, pkg) => p.then(() => {
-      spinner.text = pkg
+    .reduce((p, pkgs) => p.then(() => {
+      spinner.text = colorName(pkgs)
       spinner.start()
-      return jsize(pkg)
+      return jsize(pkgs.split('+'))
         .then(print)
         .catch(err => spinner.fail(err.message))
     }), Promise.resolve())
@@ -46,7 +46,7 @@ if (program.args.length > 0) {
  * @return {number}
  */
 function maxLength (max, it) {
-  return Math.max(max, it.length)
+  return Math.max(max, colorName(it).length)
 }
 
 /**
@@ -81,4 +81,14 @@ function colorBytes (n) {
   } else {
     return chalk.red(str)
   }
+}
+
+/**
+ * Adds colors to package name.
+ *
+ * @param {string} pkgs - the package names to color.
+ * @return {string}
+ */
+function colorName (pkgs) {
+  return pkgs.replace(/\+/g, chalk.dim(' + '))
 }
