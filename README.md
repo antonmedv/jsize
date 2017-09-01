@@ -1,10 +1,8 @@
-<p align="center">
+<h1 align="center">
   <a href="https://github.com/antonmedv/jsize">
     <img src="https://user-images.githubusercontent.com/141232/29957332-1d50d0be-8f17-11e7-91cc-2329a01d5b23.png" width="600">
   </a>
-</p>  
-
-# jsize
+</h1>
 
 To install:
 ```
