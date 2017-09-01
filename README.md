@@ -1,3 +1,9 @@
+<p align="center">
+  <a href="https://github.com/antonmedv/jsize">
+    <img src="https://user-images.githubusercontent.com/141232/29957332-1d50d0be-8f17-11e7-91cc-2329a01d5b23.png" width="600">
+  </a>
+</p>  
+
 # jsize
 
 To install:
@@ -6,10 +12,10 @@ npm install -g jsize
 ```
 
 ## Features
-* [Scoped packages](https://docs.npmjs.com/misc/scope).
-* Individual files within packages.
-* Multiple packages at once.
-* Easy CLI and programatic usage.
+* [Scoped packages](https://docs.npmjs.com/misc/scope)
+* Individual files within packages
+* Multiple packages at once
+* Easy CLI and programatic usage
 
 ## CLI Usage
 
@@ -54,3 +60,7 @@ $ jsize react react-dom
 ```
 
 Where the total for `react` in the browser is `51.12kb (gzip)`.
+
+## License
+
+Licensed under the [MIT license](https://github.com/antonmedv/jsize/blob/master/LICENSE).
