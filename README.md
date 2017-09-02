@@ -49,6 +49,11 @@ jsize('lodash').then(({ initial, minified, gzipped }) => {
 jsize(['lodash/map', 'lodash/filter']).then(({ initial, minified, gzipped }) => {
   // Work with values (all in bytes).
 })
+
+// You can even specify webpack options.
+jsize('somemodule', { plugins: [...] }).then((stats) => {
+  // Work with values (all in bytes).
+})
 ```
 
 ## Total size of multiple entries.

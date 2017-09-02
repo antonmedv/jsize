@@ -16,7 +16,8 @@ const jsize = require('../index')
 // Parse cli options.
 program
   .usage('[options] <name ...>')
-  .option('-v, --verbose', 'Display initial, minified and gzipped size.')
+  .option('-v, --verbose', 'display initial, minified and gzipped size')
+  .option('-t, --target [target]', 'change webpack target (default is web)', 'web')
   .parse(process.argv)
 
 // Calucate the padding based on the longest package name.
@@ -29,7 +30,7 @@ if (program.args.length > 0) {
     .reduce((p, pkgs) => p.then(() => {
       spinner.text = colorName(pkgs)
       spinner.start()
-      return jsize(pkgs.split('+'))
+      return jsize(pkgs.split('+'), { target: program.target })
         .then(print)
         .catch(err => spinner.fail(err.message))
     }), Promise.resolve())
