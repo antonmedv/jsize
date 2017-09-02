@@ -36,7 +36,7 @@ $ jsize jquery -v
 ✔ jquery    271 kB (initial)    87.3 kB (minified)  30.6 kB (gzipped)
 ```
 
-## Programtic Usage
+## Programmatic Usage
 
 ```js
 import jsize from 'jsize'

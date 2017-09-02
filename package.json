@@ -4,7 +4,7 @@
   "description": "Find out minified and gziped package size",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "ava",
     "lint": "standard --verbose | snazzy",
     "prepublish": "npm run lint"
   },
@@ -35,6 +35,7 @@
     "jsize": "./bin/jsize"
   },
   "devDependencies": {
+    "ava": "^0.22.0",
     "snazzy": "^7.0.0",
     "standard": "^10.0.3"
   }
