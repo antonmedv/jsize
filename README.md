@@ -4,7 +4,7 @@
   </a>
 </h1>
 
-To install:
+Find out minified and gzipped npm package size.
 ```
 npm install -g jsize
 ```
