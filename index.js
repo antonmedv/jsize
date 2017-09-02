@@ -18,16 +18,31 @@ const resolver = enhancedResolve.ResolverFactory.createResolver({
 /**
  * Calculates the sizes (initial, minified and gziped) for a given package.
  *
- * @param {string} pkg - the package to check the size of.
+ * @param {string|string[]} pkgs - the package(s) to check the size of.
  * @return {Promise}
  */
-module.exports = function jsize (pkg) {
-  const parsed = parsePackageName(pkg)
-  const name = parsed.name
-  const version = parsed.version
-  const file = parsed.path
-  return install(`${name}@${version || 'latest'}`)
-    .then(() => build(name, file))
+module.exports = function jsize (pkgs) {
+  // Parse all package details. (allows for single or multiple packages)
+  pkgs = [].concat(pkgs).map(parsePackageName)
+  // Get unique package ids.
+  const ids = pkgs
+    .map(it => it.name + '@' + (it.version || 'latest'))
+    .filter((id, i, all) => all.indexOf(id) === i)
+
+  // Install modules.
+  return install(ids)
+    // Lookup install paths for each module.
+    .then(() => Promise.all(pkgs.map(loadPaths)))
+    // Extract entry and external files, then build with webpack.
+    .then(paths => build({
+      entry: paths.map(path => path.entry),
+      externals: paths.reduce((externals, path) => {
+        const peers = require(path.package).peerDependencies
+        if (!peers) return externals
+        return externals.concat(Object.keys(peers))
+      }, [])
+    }))
+    // Calculate sizes.
     .then(script => {
       const minimized = uglify.minify(script).code
       return getGzippedSize(minimized).then(gzipped => {
@@ -41,11 +56,11 @@ module.exports = function jsize (pkg) {
 }
 
 /**
- * Installs a package with npm to the temp directory.
+ * Installs packages with npm to the temp directory.
  *
- * @param {string} id - the package to install.
+ * @param {string[]} ids - the list of packages to install.
  */
-function install (id) {
+function install (ids) {
   return new Promise((resolve, reject) => {
     // Temporarily disable logging.
     const log = console.log
@@ -58,7 +73,7 @@ function install (id) {
     }, (err, npm) => {
       if (err) return reject(err)
 
-      npm.commands.install(tmp, [id], (err, deps) => {
+      npm.commands.install(tmp, ids, (err, deps) => {
         // Restore logging.
         console.log = log
         if (err) return reject(err)
@@ -72,40 +87,48 @@ function install (id) {
 /**
  * Uses webpack to build a file in memory and return the bundle.
  *
- * @param {*} name - library folder name
- * @param {*} file - entry point path relative to the library folder
+ * @param {object} config - webpack config options.
  * @return {Promise<string>}
  */
-function build (name, file) {
-  return Promise.all([
-    resolve(tmp, path.join(name, file)),
-    resolve(tmp, path.join(name, 'package.json'))
-  ]).then(results => {
-    const entry = results[0]
-    const peers = require(results[1]).peerDependencies
-    const externals = Object.keys(peers || {})
-
-    return new Promise((resolve, reject) => {
-      const compiler = webpack({
-        target: 'web',
-        output: { filename: 'file' },
-        entry: entry,
-        externals: externals,
-        plugins: [
-          new webpack.optimize.UglifyJsPlugin({ sourcemap: false }),
-          new webpack.DefinePlugin({ 'process.env.NODE_ENV': '"production"', 'process.browser': true })
-        ]
-      }, (err, stats) => {
-        if (err || stats.hasErrors()) reject(err || new Error(stats.toString('errors-only')))
-        const compilation = stats.compilation
-        const compiler = compilation.compiler
-        const memoryFs = compiler.outputFileSystem
-        const outputFile = compilation.assets.file.existsAt
-        resolve(memoryFs.readFileSync(outputFile, 'utf8'))
-      })
-      compiler.outputFileSystem = new MemoryFs()
+function build (config) {
+  return new Promise((resolve, reject) => {
+    const compiler = webpack({
+      target: 'web',
+      entry: config.entry,
+      externals: config.externals,
+      output: { filename: 'file' },
+      plugins: [
+        new webpack.optimize.UglifyJsPlugin({ sourcemap: false }),
+        new webpack.DefinePlugin({ 'process.env.NODE_ENV': '"production"', 'process.browser': true })
+      ]
+    }, (err, stats) => {
+      if (err || stats.hasErrors()) reject(err || new Error(stats.toString('errors-only')))
+      const compilation = stats.compilation
+      const compiler = compilation.compiler
+      const memoryFs = compiler.outputFileSystem
+      const outputFile = compilation.assets.file.existsAt
+      resolve(memoryFs.readFileSync(outputFile, 'utf8'))
     })
+    compiler.outputFileSystem = new MemoryFs()
   })
+}
+
+/**
+ * Given package details loads resolved package and entry files.
+ *
+ * @param {object} pkg - the parsed package details.
+ * @return {Promise}
+ */
+function loadPaths (pkg) {
+  const name = pkg.name
+  const file = pkg.path
+  return Promise.all([
+    resolveFile(tmp, path.join(name, file)),
+    resolveFile(tmp, path.join(name, 'package.json'))
+  ]).then(files => ({
+    entry: files[0],
+    package: files[1]
+  }))
 }
 
 /**
@@ -114,7 +137,7 @@ function build (name, file) {
  * @param {string} file - the file to find.
  * @return {Promise<string>}
  */
-function resolve (dir, file) {
+function resolveFile (dir, file) {
   return new Promise((resolve, reject) => {
     resolver.resolve({}, dir, file, (err, result) => {
       if (err) reject(err)
