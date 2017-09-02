@@ -1,11 +1,8 @@
 #!/usr/bin/env node
 'use strict'
 
-// Check for cli updates.
 const updateNotifier = require('update-notifier')
 const pkg = require('../package.json')
-updateNotifier({ pkg: pkg }).notify()
-
 const chalk = require('chalk')
 const spinner = require('ora')()
 const program = require('commander')
@@ -15,6 +12,9 @@ const stringWidth = require('string-width')
 const createTable = require('text-table')
 const jsize = require('../index')
 const originalLog = console.log
+
+// Check for cli updates.
+updateNotifier({pkg: pkg}).notify()
 
 // Parse cli options.
 program
@@ -73,6 +73,42 @@ if (program.args.length > 0) {
     })
 } else {
   program.help()
+}
+
+/**
+ * Parses program args to list of bundles, each bundle is list of packages.
+ * Example: "a + c b" -> [ ['a', 'b'], ['c'] ]
+ *
+ * @param {array} args
+ * @returns {array}
+ */
+function parse (args) {
+  // Tokenize args to standard form: ['a+c', '+', 'b'] -> ['a', '+', 'c', '+', 'b']
+  const tokens = args
+    .join(' ')
+    .replace(/\+/g, ' + ')
+    .split(' ')
+    .filter(s => s !== '')
+
+  const next = () => tokens.shift()
+  const pack = () => {
+    lookahead && x[x.length - 1].push(lookahead)
+    lookahead = next()
+  }
+
+  let x = []
+  let lookahead = next()
+
+  do {
+    x.push([])
+    pack()
+    while (lookahead === '+') {
+      lookahead = next()
+      pack()
+    }
+  } while (lookahead || tokens.length > 0)
+
+  return x
 }
 
 /**
