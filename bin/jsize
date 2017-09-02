@@ -13,6 +13,19 @@ const prettyBytes = require('pretty-bytes')
 const spinner = require('ora')('Starting...').start()
 const jsize = require('../index')
 
+/**
+ * Normalizes cli arguments list.
+ * Replaces `jsize react + react-dom`
+ * With `jsize react+react-dom`
+ */
+process.argv.forEach((arg, i, args) => {
+  if (arg === '+') {
+    const prev = args[i - 1]
+    const next = args[i + 1]
+    args.splice(i - 1, 3, prev + '+' + next)
+  }
+})
+
 // Parse cli options.
 program
   .usage('[options] <name ...>')
