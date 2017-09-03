@@ -24,11 +24,11 @@ test('programmatic usage +', async t => {
 })
 
 test('cli usage', async t => {
-  const {stderr} = await execFile('bin/jsize', ['react@15'])
-  t.regex(stderr, /✔ react@15\s+7.23 kB \(gzipped\)/)
+  const {stdout} = await execFile('bin/jsize', ['react@15'])
+  t.regex(stdout, /react@15 *= *7\.23 kB \(gzipped\)/)
 })
 
 test('cli usage +', async t => {
-  const {stderr} = await execFile('bin/jsize', ['react@15+react-dom@15'])
-  t.regex(stderr, /✔ react@15 \+ react-dom@15\s+43.6 kB \(gzipped\)/)
+  const {stdout} = await execFile('bin/jsize', ['react@15+react-dom@15'])
+  t.regex(stdout, /react@15 \+ react-dom@15 *= *43\.6 kB \(gzipped\)/)
 })
