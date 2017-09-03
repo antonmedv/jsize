@@ -36,6 +36,15 @@ $ jsize jquery -v
 ✔ jquery    271 kB (initial)    87.3 kB (minified)  30.6 kB (gzipped)
 ```
 
+### `-t, --target [target]`
+
+Specific a webpack target (default is web).
+
+```
+$ jsize react@15 --target node
+✔ react@15    7.23 kB (initial)
+```
+
 ## Programmatic Usage
 
 ```js
@@ -46,14 +55,10 @@ jsize('lodash').then(({ initial, minified, gzipped }) => {
 })
 
 // Also supports multiple entries.
-jsize(['lodash/map', 'lodash/filter']).then(({ initial, minified, gzipped }) => {
-  // Work with values (all in bytes).
-})
+jsize(['lodash/map', 'lodash/filter'])
 
 // You can even specify webpack options.
-jsize('somemodule', { plugins: [...] }).then((stats) => {
-  // Work with values (all in bytes).
-})
+jsize('somemodule', { plugins: [new MyWebpackPlugin()] })
 ```
 
 ## Total size of multiple entries.
