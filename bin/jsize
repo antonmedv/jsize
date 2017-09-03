@@ -7,11 +7,14 @@ const pkg = require('../package.json')
 updateNotifier({ pkg: pkg }).notify()
 
 const chalk = require('chalk')
-const padEnd = require('pad-end')
+const spinner = require('ora')()
 const program = require('commander')
+const logUpdate = require('log-update')
 const prettyBytes = require('pretty-bytes')
-const spinner = require('ora')('Starting...').start()
+const stringWidth = require('string-width')
+const createTable = require('text-table')
 const jsize = require('../index')
+const originalLog = console.log
 
 // Parse cli options.
 program
@@ -20,49 +23,108 @@ program
   .option('-t, --target [target]', 'change webpack target (default is web)', 'web')
   .parse(process.argv)
 
-// Calucate the padding based on the longest package name.
-const padding = 4 + program.args.reduce(maxLength, 0)
+// Store results for rendering later.
+const bundles = []
+const headings = [
+  'Package',
+  '',
+  'Initial',
+  'Minified',
+  'Gzipped'
+].map(heading => chalk.dim(heading))
 
 if (program.args.length > 0) {
+  // Start cli render loop.
+  const interval = setInterval(render, 100)
+
   // Build and analyze packages sequentially.
   program
     .args
-    .reduce((p, pkgs) => p.then(() => {
-      spinner.text = colorName(pkgs)
-      spinner.start()
-      return jsize(pkgs.split('+'), { target: program.target })
-        .then(print)
-        .catch(err => spinner.fail(err.message))
-    }), Promise.resolve())
-    .catch(err => console.error(err))
+    .reduce((p, pkgs) => {
+      const bundle = {
+        name: pkgs.replace(/\+/g, chalk.dim(' + ')),
+        stats: null
+      }
+      bundles.push(bundle)
+
+      return p.then(() => {
+        return jsize(pkgs.split('+'), { target: program.target })
+          .then(result => { bundle.stats = result })
+          .catch(err => { bundle.error = err.message })
+      })
+    }, Promise.resolve())
+    .then(() => {
+      clearInterval(interval)
+      render()
+
+      const err = bundles
+        .map(bundle => bundle.error)
+        .filter(Boolean)
+        .join('\n')
+
+      if (err) {
+        console.error(chalk.red(err))
+        process.exit(1)
+      }
+    })
+    .catch(err => {
+      console.error(err)
+      process.exit(1)
+    })
 } else {
   program.help()
 }
 
 /**
- * Reducer to calculate the max length.
- *
- * @param {number} max - the current maximum.
- * @param {string|array} it - the item being tested.
- * @return {number}
+ * Renders a table with the current results to the terminal.
  */
-function maxLength (max, it) {
-  return Math.max(max, colorName(it).length)
-}
+function render () {
+  const loading = spinner.frame()
+  const table = bundles.map(bundle => {
+    const stats = bundle.stats
+    const row = [
+      bundle.name,
+      chalk.dim('=')
+    ]
 
-/**
- * Logs stats from jsize results.
- *
- * @param {object} result - the sizes from jsize.
- */
-function print (result) {
-  let info = ''
+    if (stats) {
+      if (program.verbose) {
+        row.push(
+          prettyBytes(stats.initial),
+          prettyBytes(stats.minified),
+          colorBytes(stats.gzipped)
+        )
+      } else {
+        row.push(colorBytes(stats.gzipped) + chalk.dim(' (gzipped)'))
+      }
+    } else {
+      const fill = bundle.error ? chalk.red('X') : loading
+      row.push(fill)
+
+      if (program.verbose) {
+        row.push(fill, fill)
+      }
+    }
+
+    return row
+  })
+
   if (program.verbose) {
-    info += padEnd(prettyBytes(result.initial) + ' (initial)', 20, ' ')
-    info += padEnd(prettyBytes(result.minified) + ' (minified)', 20, ' ')
+    table.unshift(headings, [''])
   }
-  info += colorBytes(result.gzipped) + ' (gzipped)'
-  spinner.succeed(padEnd(spinner.text, padding, ' ') + info)
+
+  // Enable logs for long enough to print to the screen.
+  const curLog = console.log
+  console.log = originalLog
+  logUpdate(
+    '\n' +
+    createTable(table, { stringLength: stringWidth })
+      .split('\n')
+      .map(s => '  ' + s)
+      .join('\n') +
+    '\n'
+  )
+  console.log = curLog
 }
 
 /**
@@ -82,14 +144,4 @@ function colorBytes (n) {
   } else {
     return chalk.red(str)
   }
-}
-
-/**
- * Adds colors to package name.
- *
- * @param {string} pkgs - the package names to color.
- * @return {string}
- */
-function colorName (pkgs) {
-  return pkgs.replace(/\+/g, chalk.dim(' + '))
 }
