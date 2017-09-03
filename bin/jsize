@@ -19,7 +19,8 @@ const originalLog = console.log
 // Parse cli options.
 program
   .usage('[options] <name ...>')
-  .option('-v, --verbose', 'Display initial, minified and gzipped size.')
+  .option('-v, --verbose', 'display initial, minified and gzipped size')
+  .option('-t, --target [target]', 'change webpack target (default is web)', 'web')
   .parse(process.argv)
 
 // Store results for rendering later.
@@ -47,7 +48,7 @@ if (program.args.length > 0) {
       bundles.push(bundle)
 
       return p.then(() => {
-        return jsize(pkgs.split('+'))
+        return jsize(pkgs.split('+'), { target: program.target })
           .then(result => { bundle.stats = result })
           .catch(err => { bundle.error = err.message })
       })
