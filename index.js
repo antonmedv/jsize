@@ -2,7 +2,7 @@
 
 const npm = require('npm')
 const path = require('path')
-const tmp = require('os').tmpdir()
+const os = require('os')
 const webpack = require('webpack')
 const uglify = require('uglify-js')
 const gzipSize = require('gzip-size')
@@ -10,6 +10,9 @@ const MemoryFs = require('memory-fs')
 const Buffer = require('buffer').Buffer
 const parsePackageName = require('parse-package-name')
 const enhancedResolve = require('enhanced-resolve')
+
+const tmp = path.join(os.tmpdir(), 'jsize-' + Math.random().toString(36).substring(7))
+
 const resolvers = {
   browser: enhancedResolve.ResolverFactory.createResolver({
     fileSystem: new enhancedResolve.NodeJsInputFileSystem(),
@@ -39,7 +42,7 @@ module.exports = function jsize (pkgs, config) {
 
   // Install modules.
   return install(ids)
-    // Lookup install paths for each module.
+  // Lookup install paths for each module.
     .then(() => Promise.all(pkgs.map(pkg => loadPaths(pkg, config))))
     // Extract entry and external files, then build with webpack.
     .then(paths => build(Object.assign(config, {
@@ -79,15 +82,16 @@ function install (ids) {
       progress: false,
       loglevel: 'silent'
     }, (err, npm) => {
-      if (err) return reject(err)
+      if (err) {
+        return reject(err)
+      }
 
       npm.commands.install(tmp, ids, (err, deps) => {
         // Restore logging.
         console.log = log
         if (err) return reject(err)
         resolve(deps)
-      }
-    )
+      })
     })
   })
 }
@@ -101,10 +105,10 @@ function install (ids) {
 function build (config) {
   return new Promise((resolve, reject) => {
     const compiler = webpack(Object.assign(config, {
-      output: { filename: 'file' },
+      output: {filename: 'file'},
       plugins: [
-        new webpack.optimize.UglifyJsPlugin({ sourcemap: false }),
-        new webpack.DefinePlugin({ 'process.env.NODE_ENV': '"production"', 'process.browser': true })
+        new webpack.optimize.UglifyJsPlugin({sourcemap: false}),
+        new webpack.DefinePlugin({'process.env.NODE_ENV': '"production"', 'process.browser': true})
       ].concat(config.plugins || [])
     }), (err, stats) => {
       if (err || stats.hasErrors()) reject(err || new Error(stats.toString('errors-only')))
