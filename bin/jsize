@@ -23,8 +23,13 @@ program
   .option('-t, --target [target]', 'change webpack target (default is web)', 'web')
   .parse(process.argv)
 
-// Store results for rendering later.
-const bundles = []
+const bundles = parse(program.args).map(packages => ({
+  packages,
+  name: packages.join(chalk.dim(' + ')),
+  stats: null,
+  error: null
+}))
+
 const headings = [
   'Package',
   '',
@@ -38,17 +43,10 @@ if (program.args.length > 0) {
   const interval = setInterval(render, 100)
 
   // Build and analyze packages sequentially.
-  program
-    .args
-    .reduce((p, pkgs) => {
-      const bundle = {
-        name: pkgs.replace(/\+/g, chalk.dim(' + ')),
-        stats: null
-      }
-      bundles.push(bundle)
-
+  bundles
+    .reduce((p, bundle) => {
       return p.then(() => {
-        return jsize(pkgs.split('+'), { target: program.target })
+        return jsize(bundle.packages, {target: program.target})
           .then(result => { bundle.stats = result })
           .catch(err => { bundle.error = err.message })
       })
@@ -154,7 +152,7 @@ function render () {
   console.log = originalLog
   logUpdate(
     '\n' +
-    createTable(table, { stringLength: stringWidth })
+    createTable(table, {stringLength: stringWidth})
       .split('\n')
       .map(s => '  ' + s)
       .join('\n') +
