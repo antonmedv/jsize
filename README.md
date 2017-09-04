@@ -13,37 +13,45 @@ npm install -g jsize
 * [Scoped packages](https://docs.npmjs.com/misc/scope)
 * Individual files within packages
 * Multiple packages at once
-* Easy CLI and programatic usage
+* Easy CLI and programmatic usage
 
 ## CLI Usage
 
 ```
-$ jsize jquery lodash lodash/map @rill/http/adapter/document
-✔ jquery                         30.6 kB (gzipped)
-✔ lodash                         24.8 kB (gzipped)
-✔ lodash/map                     5.88 kB (gzipped)
-✔ @rill/http/adapter/document    5.51 kB (gzipped)
+$ jsize jquery react+react-dom lodash/map @rill/http/adapter/document
+
+   jquery                       =  30.6 kB (gzipped)
+   react + react-dom            =  43.6 kB (gzipped)
+   lodash/map                   =  5.89 kB (gzipped)
+   @rill/http/adapter/document  =  5.52 kB (gzipped)
+
 ```
 
 ### Options
 
-### `-v, --verbose`
+* #### `-v, --verbose`
 
-Display initial size, minified size and gzip size.
+  Display initial size, minified size and gzip size.
 
-```
-$ jsize jquery -v
-✔ jquery    271 kB (initial)    87.3 kB (minified)  30.6 kB (gzipped)
-```
+  ```
+  $ jsize jquery -v
 
-### `-t, --target [target]`
+     Package     Initial  Minified  Gzipped
 
-Specific a webpack target (default is web).
+     jquery   =  271 kB   87.3 kB   30.6 kB
 
-```
-$ jsize react@15 --target node
-✔ react@15    7.23 kB (initial)
-```
+  ```
+
+* #### `-t, --target [target]`
+
+  Specific a webpack target (default is web).
+
+  ```
+  $ jsize react@15 --target node
+
+     react@15  =  7.23 kB (gzipped)
+
+  ```
 
 ## Programmatic Usage
 
@@ -61,23 +69,27 @@ jsize(['lodash/map', 'lodash/filter'])
 jsize('somemodule', { plugins: [new MyWebpackPlugin()] })
 ```
 
-## Total size of multiple entries.
+## Total size of multiple entries
 
 You can add up multiple entries by using `+` between entry names.
 This is useful because in some cases like in lodash there is a runtime which is a one time cost.
 
 ```js
-$ jsize lodash/map+lodash/assign+lodash/filter
-✔ lodash/map + lodash/assign + lodash/filter    6.63 kB (gzipped)
+$ jsize lodash/map + lodash/assign + lodash/filter
+
+   lodash/map + lodash/assign + lodash/filter  =  6.63 kB (gzipped)
+
 ```
 
 Sizes look much larger when comparing individually because it doesn't account for the shared runtime.
 
 ```js
 $ jsize lodash/map lodash/assign lodash/filter
-✔ lodash/map       5.89 kB (gzipped)
-✔ lodash/assign    2.78 kB (gzipped)
-✔ lodash/filter    5.85 kB (gzipped)
+
+   lodash/map     =  5.89 kB (gzipped)
+   lodash/assign  =  2.78 kB (gzipped)
+   lodash/filter  =  5.85 kB (gzipped)
+
 ```
 
 ## Peer Dependencies
@@ -87,9 +99,13 @@ To have a better idea of the total size of all dependencies you must add up all 
 
 ```
 $ jsize react
-✔ react    7.23 kB (gzipped)
+
+   react  =  7.23 kB (gzipped)
+
 $ jsize react+react-dom
-✔ react + react-dom  43.6 kB (gzipped)
+
+   react + react-dom  =  43.6 kB (gzipped)
+
 ```
 
 ## License
