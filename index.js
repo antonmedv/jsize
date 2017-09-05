@@ -107,8 +107,10 @@ function build (config) {
     const compiler = webpack(Object.assign(config, {
       output: {filename: 'file'},
       plugins: [
-        new webpack.optimize.UglifyJsPlugin({sourcemap: false}),
-        new webpack.DefinePlugin({'process.env.NODE_ENV': '"production"', 'process.browser': true})
+        new webpack.DefinePlugin({
+          'process.env.NODE_ENV': '"production"',
+          'process.browser': isBrowserConfig(config)
+        })
       ].concat(config.plugins || [])
     }), (err, stats) => {
       if (err || stats.hasErrors()) reject(err || new Error(stats.toString('errors-only')))
@@ -126,7 +128,7 @@ function build (config) {
  * Given package details loads resolved package and entry files.
  *
  * @param {object} pkg - the parsed package details.
- * @param {object} config - webpack config options.
+ * @param {object} config - the webpack config.
  * @return {Promise}
  */
 function loadPaths (pkg, config) {
@@ -143,12 +145,13 @@ function loadPaths (pkg, config) {
  *
  * @param {string} dir - the directory to look in.
  * @param {string} file - the file to find.
- * @param {object} config - webpack config options.
+ * @param {object} config - the webpack config.
  * @return {Promise<string>}
  */
 function resolveFile (dir, file, config) {
   return new Promise((resolve, reject) => {
-    getResolver(config).resolve({}, dir, file, (err, result) => {
+    const resolver = resolvers[isBrowserConfig(config) ? 'browser' : 'server']
+    resolver.resolve({}, dir, file, (err, result) => {
       if (err) reject(err)
       else resolve(result)
     })
@@ -156,12 +159,12 @@ function resolveFile (dir, file, config) {
 }
 
 /**
- * Gets the proper file resolver based on webpack target.
+ * Checks if a webpack config targets the browser.
  *
- * @param {object} config - webpack config options.
- * @return {object}
+ * @param {string} config - the webpack config.
+ * @return {boolean|undefined}
  */
-function getResolver (config) {
+function isBrowserConfig (config) {
   switch (config.target) {
     case 'server':
     case 'node':
@@ -169,9 +172,9 @@ function getResolver (config) {
     case 'atom':
     case 'electron':
     case 'electron-main':
-      return resolvers.server
+      return undefined
     default:
-      return resolvers.browser
+      return true
   }
 }
 
