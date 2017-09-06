@@ -4,13 +4,12 @@ const npm = require('npm')
 const path = require('path')
 const os = require('os')
 const webpack = require('webpack')
-const uglify = require('uglify-js')
+const minify = require('babel-minify')
 const gzipSize = require('gzip-size')
 const MemoryFs = require('memory-fs')
 const Buffer = require('buffer').Buffer
 const parsePackageName = require('parse-package-name')
 const enhancedResolve = require('enhanced-resolve')
-
 const tmp = path.join(os.tmpdir(), 'jsize-' + Math.random().toString(36).substring(7))
 
 const resolvers = {
@@ -55,11 +54,11 @@ module.exports = function jsize (pkgs, config) {
     })))
     // Calculate sizes.
     .then(script => {
-      const minimized = uglify.minify(script).code
-      return getGzippedSize(minimized).then(gzipped => {
+      const minified = minify(script).code
+      return getGzippedSize(minified).then(gzipped => {
         return {
           initial: Buffer.byteLength(script, 'utf8'),
-          minified: Buffer.byteLength(minimized),
+          minified: Buffer.byteLength(minified),
           gzipped: gzipped
         }
       })

@@ -17,6 +17,7 @@
   "license": "MIT",
   "repository": "antonmedv/jsize",
   "dependencies": {
+    "babel-minify": "^0.2.0",
     "chalk": "^2.1.0",
     "commander": "^2.11.0",
     "enhanced-resolve": "^3.4.1",
@@ -28,7 +29,6 @@
     "parse-package-name": "^0.1.0",
     "pretty-bytes": "^4.0.2",
     "text-table": "^0.2.0",
-    "uglify-js": "^3.0.28",
     "update-notifier": "^2.2.0",
     "webpack": "^3.5.5"
   },
