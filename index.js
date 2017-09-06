@@ -1,8 +1,8 @@
 'use strict'
 
-const npm = require('npm')
 const path = require('path')
 const os = require('os')
+const cp = require('child_process')
 const webpack = require('webpack')
 const minify = require('babel-minify')
 const gzipSize = require('gzip-size')
@@ -11,10 +11,12 @@ const Buffer = require('buffer').Buffer
 const parsePackageName = require('parse-package-name')
 const enhancedResolve = require('enhanced-resolve')
 const tmp = path.join(os.tmpdir(), 'jsize-' + Math.random().toString(36).substring(7))
+const npmBin = path.join(require.resolve('npm/package.json'), '../../.bin/npm')
 const resolver = enhancedResolve.ResolverFactory.createResolver({
   fileSystem: new enhancedResolve.NodeJsInputFileSystem(),
   mainFields: ['browser', 'module', 'main']
 })
+require('fs').mkdirSync(tmp)
 
 /**
  * Calculates the sizes (initial, minified and gziped) for a given package.
@@ -63,25 +65,9 @@ module.exports = function jsize (pkgs) {
  */
 function install (ids) {
   return new Promise((resolve, reject) => {
-    // Temporarily disable logging.
-    const log = console.log
-    console.log = () => {}
-
-    npm.load({
-      loaded: false,
-      progress: false,
-      loglevel: 'silent'
-    }, (err, npm) => {
-      if (err) {
-        return reject(err)
-      }
-
-      npm.commands.install(tmp, ids, (err, deps) => {
-        // Restore logging.
-        console.log = log
-        if (err) return reject(err)
-        resolve(deps)
-      })
+    cp.execFile(npmBin, ['i', '--no-save', '--prefix', tmp].concat(ids), err => {
+      if (err) reject(err)
+      else resolve()
     })
   })
 }
