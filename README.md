@@ -42,17 +42,6 @@ $ jsize jquery react+react-dom lodash/map @rill/http/adapter/document
 
   ```
 
-* #### `-t, --target [target]`
-
-  Specific a webpack target (default is web).
-
-  ```
-  $ jsize react@15 --target node
-
-     react@15  =  7.23 kB (gzipped)
-
-  ```
-
 ## Programmatic Usage
 
 ```js
@@ -64,9 +53,6 @@ jsize('lodash').then(({ initial, minified, gzipped }) => {
 
 // Also supports multiple entries.
 jsize(['lodash/map', 'lodash/filter'])
-
-// You can even specify webpack options.
-jsize('somemodule', { plugins: [new MyWebpackPlugin()] })
 ```
 
 ## Total size of multiple entries

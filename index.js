@@ -11,27 +11,18 @@ const Buffer = require('buffer').Buffer
 const parsePackageName = require('parse-package-name')
 const enhancedResolve = require('enhanced-resolve')
 const tmp = path.join(os.tmpdir(), 'jsize-' + Math.random().toString(36).substring(7))
-
-const resolvers = {
-  browser: enhancedResolve.ResolverFactory.createResolver({
-    fileSystem: new enhancedResolve.NodeJsInputFileSystem(),
-    mainFields: ['browser', 'module', 'main']
-  }),
-  server: enhancedResolve.ResolverFactory.createResolver({
-    fileSystem: new enhancedResolve.NodeJsInputFileSystem(),
-    mainFields: ['module', 'main']
-  })
-}
+const resolver = enhancedResolve.ResolverFactory.createResolver({
+  fileSystem: new enhancedResolve.NodeJsInputFileSystem(),
+  mainFields: ['browser', 'module', 'main']
+})
 
 /**
  * Calculates the sizes (initial, minified and gziped) for a given package.
  *
  * @param {string|string[]} pkgs - the package(s) to check the size of.
- * @param {object} config - the webpack config options.
  * @return {Promise}
  */
-module.exports = function jsize (pkgs, config) {
-  config = config || {}
+module.exports = function jsize (pkgs) {
   // Parse all package details. (allows for single or multiple packages)
   pkgs = [].concat(pkgs).map(parsePackageName)
   // Get unique package ids.
@@ -42,16 +33,16 @@ module.exports = function jsize (pkgs, config) {
   // Install modules.
   return install(ids)
   // Lookup install paths for each module.
-    .then(() => Promise.all(pkgs.map(pkg => loadPaths(pkg, config))))
+    .then(() => Promise.all(pkgs.map(loadPaths)))
     // Extract entry and external files, then build with webpack.
-    .then(paths => build(Object.assign(config, {
+    .then(paths => build({
       entry: paths.map(path => path.entry),
       externals: paths.reduce((externals, path) => {
         const peers = require(path.package).peerDependencies
         if (!peers) return externals
         return externals.concat(Object.keys(peers))
       }, [])
-    })))
+    }))
     // Calculate sizes.
     .then(script => {
       const minified = minify(script).code
@@ -104,13 +95,13 @@ function install (ids) {
 function build (config) {
   return new Promise((resolve, reject) => {
     const compiler = webpack(Object.assign(config, {
-      output: {filename: 'file'},
+      output: { filename: 'file' },
       plugins: [
         new webpack.DefinePlugin({
           'process.env.NODE_ENV': '"production"',
-          'process.browser': isBrowserConfig(config)
+          'process.browser': true
         })
-      ].concat(config.plugins || [])
+      ]
     }), (err, stats) => {
       if (err || stats.hasErrors()) reject(err || new Error(stats.toString('errors-only')))
       const compilation = stats.compilation
@@ -127,13 +118,12 @@ function build (config) {
  * Given package details loads resolved package and entry files.
  *
  * @param {object} pkg - the parsed package details.
- * @param {object} config - the webpack config.
  * @return {Promise}
  */
-function loadPaths (pkg, config) {
+function loadPaths (pkg) {
   const name = pkg.name
   const file = pkg.path
-  return resolveFile(tmp, path.join(name, file), config).then(entry => ({
+  return resolveFile(tmp, path.join(name, file)).then(entry => ({
     entry: entry,
     package: path.join(tmp, 'node_modules', name, 'package.json')
   }))
@@ -144,37 +134,15 @@ function loadPaths (pkg, config) {
  *
  * @param {string} dir - the directory to look in.
  * @param {string} file - the file to find.
- * @param {object} config - the webpack config.
  * @return {Promise<string>}
  */
-function resolveFile (dir, file, config) {
+function resolveFile (dir, file) {
   return new Promise((resolve, reject) => {
-    const resolver = resolvers[isBrowserConfig(config) ? 'browser' : 'server']
     resolver.resolve({}, dir, file, (err, result) => {
       if (err) reject(err)
       else resolve(result)
     })
   })
-}
-
-/**
- * Checks if a webpack config targets the browser.
- *
- * @param {string} config - the webpack config.
- * @return {boolean|undefined}
- */
-function isBrowserConfig (config) {
-  switch (config.target) {
-    case 'server':
-    case 'node':
-    case 'async-node':
-    case 'atom':
-    case 'electron':
-    case 'electron-main':
-      return undefined
-    default:
-      return true
-  }
 }
 
 /**

@@ -20,7 +20,6 @@ updateNotifier({pkg: pkg}).notify()
 program
   .usage('[options] <name ...>')
   .option('-v, --verbose', 'display initial, minified and gzipped size')
-  .option('-t, --target [target]', 'change webpack target (default is web)', 'web')
   .parse(process.argv)
 
 const bundles = parse(program.args).map(packages => ({
@@ -46,7 +45,7 @@ if (program.args.length > 0) {
   bundles
     .reduce((p, bundle) => {
       return p.then(() => {
-        return jsize(bundle.packages, {target: program.target})
+        return jsize(bundle.packages)
           .then(result => { bundle.stats = result })
           .catch(err => { bundle.error = err.message })
       })
