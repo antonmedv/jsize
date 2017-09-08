@@ -11,7 +11,6 @@ const prettyBytes = require('pretty-bytes')
 const stringWidth = require('string-width')
 const createTable = require('text-table')
 const jsize = require('../index')
-const originalLog = console.log
 
 // Check for cli updates.
 updateNotifier({pkg: pkg}).notify()
@@ -146,9 +145,6 @@ function render () {
     table.unshift(headings, [''])
   }
 
-  // Enable logs for long enough to print to the screen.
-  const curLog = console.log
-  console.log = originalLog
   logUpdate(
     '\n' +
     createTable(table, {stringLength: stringWidth})
@@ -157,7 +153,6 @@ function render () {
       .join('\n') +
     '\n'
   )
-  console.log = curLog
 }
 
 /**
