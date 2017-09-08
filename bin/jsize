@@ -5,12 +5,13 @@ const updateNotifier = require('update-notifier')
 const pkg = require('../package.json')
 const chalk = require('chalk')
 const spinner = require('ora')()
+const cp = require('child_process')
 const program = require('commander')
 const logUpdate = require('log-update')
 const prettyBytes = require('pretty-bytes')
 const stringWidth = require('string-width')
 const createTable = require('text-table')
-const jsize = require('../index')
+const execPath = require.resolve('./exec')
 
 // Check for cli updates.
 updateNotifier({pkg: pkg}).notify()
@@ -41,32 +42,33 @@ if (program.args.length > 0) {
   const interval = setInterval(render, 100)
 
   // Build and analyze packages sequentially.
-  bundles
-    .reduce((p, bundle) => {
-      return p.then(() => {
-        return jsize(bundle.packages)
-          .then(result => { bundle.stats = result })
-          .catch(err => { bundle.error = err.message })
+  Promise.all(bundles.map(bundle => {
+    // Runs jsize in a child process to avoid lag in the loading animation.
+    return new Promise(resolve => {
+      cp.execFile('node', [execPath].concat(bundle.packages), (err, stdout, stderr) => {
+        if (err) bundle.error = err.message
+        else if (stderr) bundle.error = stderr
+        else bundle.stats = JSON.parse(stdout)
+        resolve()
       })
-    }, Promise.resolve())
-    .then(() => {
-      clearInterval(interval)
-      render()
-
-      const err = bundles
-        .map(bundle => bundle.error)
-        .filter(Boolean)
-        .join('\n')
-
-      if (err) {
-        console.error(chalk.red(err))
-        process.exit(1)
-      }
     })
-    .catch(err => {
-      console.error(err)
+  })).then(() => {
+    clearInterval(interval)
+    render()
+
+    const err = bundles
+      .map(bundle => bundle.error)
+      .filter(Boolean)
+      .join('\n')
+
+    if (err) {
+      console.error(chalk.red(err))
       process.exit(1)
-    })
+    }
+  }).catch(err => {
+    console.error(err)
+    process.exit(1)
+  })
 } else {
   program.help()
 }
