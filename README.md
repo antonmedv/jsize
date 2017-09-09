@@ -18,12 +18,35 @@ npm install -g jsize
 ## CLI Usage
 
 ```
-$ jsize jquery react+react-dom lodash/map @rill/http/adapter/document
+$ jsize react + react-dom angular vue
 
-   jquery                       =  30.6 kB (gzipped)
-   react + react-dom            =  43.6 kB (gzipped)
-   lodash/map                   =  5.89 kB (gzipped)
-   @rill/http/adapter/document  =  5.52 kB (gzipped)
+   react + react-dom  =  44.2 kB (gzipped)
+   angular            =  61.5 kB (gzipped)
+   vue                =  20.9 kB (gzipped)
+   
+```   
+
+```
+$ jsize @cycle/dom + @cycle/run
+
+   @cycle/dom + @cycle/run  =  16.7 kB (gzipped)
+
+```
+
+```
+$ jsize lodash/map + lodash/filter redux
+
+   lodash/map + lodash/filter  =  5.88 kB (gzipped)
+   redux                       =  2.77 kB (gzipped)
+   
+```
+
+```
+$ jsize --verbose jquery
+
+   Package     Initial  Minified  Gzipped
+  
+   jquery   =  271 kB   88.6 kB   30.8 kB
 
 ```
 
