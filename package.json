@@ -21,6 +21,7 @@
     "chalk": "^2.1.0",
     "commander": "^2.11.0",
     "enhanced-resolve": "^3.4.1",
+    "execa": "^0.8.0",
     "gzip-size": "^3.0.0",
     "log-update": "^2.1.0",
     "memory-fs": "^0.4.1",

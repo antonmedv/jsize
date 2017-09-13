@@ -5,7 +5,7 @@ const updateNotifier = require('update-notifier')
 const pkg = require('../package.json')
 const chalk = require('chalk')
 const spinner = require('ora')()
-const cp = require('child_process')
+const execFile = require('execa')
 const program = require('commander')
 const logUpdate = require('log-update')
 const prettyBytes = require('pretty-bytes')
@@ -44,14 +44,12 @@ if (program.args.length > 0) {
   // Build and analyze packages sequentially.
   Promise.all(bundles.map(bundle => {
     // Runs jsize in a child process to avoid lag in the loading animation.
-    return new Promise(resolve => {
-      cp.execFile('node', [execPath].concat(bundle.packages), (err, stdout, stderr) => {
-        if (err) bundle.error = err.message
-        else if (stderr) bundle.error = stderr
-        else bundle.stats = JSON.parse(stdout)
-        resolve()
+    return execFile('node', [execPath].concat(bundle.packages))
+      .then(result => {
+        if (result.stderr) throw new Error(result.stderr)
+        bundle.stats = JSON.parse(result.stdout)
       })
-    })
+      .catch(err => { bundle.error = err.message })
   })).then(() => {
     clearInterval(interval)
     render()
