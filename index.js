@@ -2,7 +2,7 @@
 
 const path = require('path')
 const os = require('os')
-const cp = require('child_process')
+const execFile = require('execa')
 const webpack = require('webpack')
 const minify = require('babel-minify')
 const gzipSize = require('gzip-size')
@@ -64,12 +64,7 @@ module.exports = function jsize (pkgs) {
  * @param {string[]} ids - the list of packages to install.
  */
 function install (ids) {
-  return new Promise((resolve, reject) => {
-    cp.execFile(npmBin, ['i', '--no-save', '--prefix', tmp].concat(ids), err => {
-      if (err) reject(err)
-      else resolve()
-    })
-  })
+  return execFile(npmBin, ['i', '--no-save', '--prefix', tmp].concat(ids))
 }
 
 /**
