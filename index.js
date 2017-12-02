@@ -48,7 +48,7 @@ module.exports = function jsize (pkgs) {
     // Calculate sizes.
     .then(script => {
       const minified = minify(script).code
-      return getGzippedSize(minified).then(gzipped => {
+      return gzipSize(minified).then(gzipped => {
         return {
           initial: Buffer.byteLength(script, 'utf8'),
           minified: Buffer.byteLength(minified),
@@ -120,21 +120,6 @@ function loadPaths (pkg) {
 function resolveFile (dir, file) {
   return new Promise((resolve, reject) => {
     resolver.resolve({}, dir, file, (err, result) => {
-      if (err) reject(err)
-      else resolve(result)
-    })
-  })
-}
-
-/**
- * Calculates the gzipped size of a string.
- *
- * @param {string} str - the string to check.
- * @return {Promise<number>}
- */
-function getGzippedSize (str) {
-  return new Promise((resolve, reject) => {
-    gzipSize(str, (err, result) => {
       if (err) reject(err)
       else resolve(result)
     })
